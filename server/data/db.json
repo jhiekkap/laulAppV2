@@ -1,5 +1,5 @@
 {
-  "productions": {
+  "songs": {
     "2323": {
       "id": "2323",
       "name": "Rukous"
@@ -9,8 +9,7 @@
       "name": "Virsi"
     }
   },
-  "tracks": { 
-  },
+  "tracks": {},
   "users": {
     "1234": {
       "id": "1234",

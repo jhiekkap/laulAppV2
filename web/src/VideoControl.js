@@ -9,31 +9,29 @@ const VideoControl = () => {
   const [videoMode, setVideoMode] = useState("recording");
   const [downloadButton, setDownloadButton] = useState({});
   const [_users, setUsers] = useState([]);
-  const [productions, setProductions] = useState([]);
+  const [songs, setProductions] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [blob, setBlob] = useState(null);
   const [trackInfo, setTrackInfo] = useState({ trackName: "" });
-  const [watchProduction, setWatchProduction] = useState("");
-  const [watchTrack, setWatchTrack] = useState("");
+  const [chosenSong, setChosenSong] = useState("");
+  const [chosenTrack, setChosenTrack] = useState("");
 
   const previewRef = useRef();
   const recordingRef = useRef();
   const playRemoteRef = useRef();
 
-  const chosenVideoTrack = watchTrack
-    ? productions.find((production) => production.id === watchProduction).name +
+  const chosenVideoTrack = chosenTrack
+    ? songs.find((song) => song.id === chosenSong).name +
       "/" +
-      tracks.find((track) => track.id === watchTrack).name
+      tracks.find((track) => track.id === chosenTrack).name
     : "";
 
   const fetchData = async () => {
     try {
       const { data: users } = await axios.get(apiBaseUrl + "/api/users");
       setUsers(users);
-      const { data: productions } = await axios.get(
-        apiBaseUrl + "/api/productions"
-      );
-      setProductions(productions);
+      const { data: songs } = await axios.get(apiBaseUrl + "/api/songs");
+      setProductions(songs);
       const { data: tracks } = await axios.get(apiBaseUrl + "/api/tracks");
       setTracks(tracks);
     } catch (error) {
@@ -49,12 +47,12 @@ const VideoControl = () => {
   //   "USERS:",
   //   users,
   //   "PRODUCTIONS: ",
-  //   productions,
+  //   songs,
   //   "TRACKS: ",
   //   tracks
   // );
   // console.log("TRACKINFO", trackInfo);
-  // console.log("WATCH PRODUCTION & TRACK", watchProduction, watchTrack);
+  // console.log("WATCH PRODUCTION & TRACK", chosenSong , chosenTrack );
 
   /* function wait(delayInMS) {
     return new Promise(resolve => setTimeout(resolve, delayInMS));
@@ -138,8 +136,7 @@ const VideoControl = () => {
     // console.log("UPLOADING", downloadButton);
 
     const name =
-      productions.find((production) => production.id === trackInfo.productionId)
-        .name +
+      songs.find((song) => song.id === trackInfo.songId).name +
       "_" +
       trackInfo.trackName;
 
@@ -167,7 +164,7 @@ const VideoControl = () => {
       const { data: newTrack } = await axios.post(apiBaseUrl + "/api/tracks", {
         url: newFile.data.url,
         userId: "1234",
-        productionId: trackInfo.productionId,
+        songId: trackInfo.songId,
         name: trackInfo.trackName,
       });
 
@@ -178,11 +175,11 @@ const VideoControl = () => {
     }
   };
 
-  const handlePlayVideo = () => { 
+  const handlePlayVideo = () => {
     setVideoMode("playRemote");
     const playRemote = playRemoteRef.current;
     playRemote.src = `http://localhost:3001${
-      tracks.find((track) => track.id === watchTrack).url
+      tracks.find((track) => track.id === chosenTrack).url
     }`;
   };
 
@@ -242,15 +239,15 @@ const VideoControl = () => {
       <div className="titleRow">
         SONG
         <select
-          value={trackInfo.productionId}
+          value={trackInfo.songId}
           onChange={({ target }) =>
-            setTrackInfo({ ...trackInfo, productionId: target.value })
+            setTrackInfo({ ...trackInfo, songId: target.value })
           }
           placeholder="valitse"
-        >  
-          {productions.map((production) => (
-            <option key={production.id} value={production.id}>
-              {production.name}
+        >
+          {songs.map((song) => (
+            <option key={song.id} value={song.id}>
+              {song.name}
             </option>
           ))}
         </select>
@@ -270,34 +267,34 @@ const VideoControl = () => {
       <div className="titleRow">
         UPLOADED SONGS
         <select
-          value={watchProduction}
-          onChange={({ target }) => setWatchProduction(target.value)}
+          value={chosenSong}
+          onChange={({ target }) => setChosenSong(target.value)}
           placeholder="valitse"
         >
-          {productions.map((production) => (
-            <option key={production.id} value={production.id}>
-              {production.name}
+          {songs.map((song) => (
+            <option key={song.id} value={song.id}>
+              {song.name}
             </option>
           ))}
         </select>
       </div>
-      {watchProduction && (
+      {chosenSong && (
         <div className="titleRow">
           TRACK
           <select
-            value={watchTrack}
-            onChange={({ target }) => setWatchTrack(target.value)}
+            value={chosenTrack}
+            onChange={({ target }) => setChosenTrack(target.value)}
             placeholder="valitse"
           >
             {tracks
-              .filter((track) => track.productionId === watchProduction)
+              .filter((track) => track.songId === chosenSong)
               .map((track) => (
                 <option key={track.id} value={track.id}>
                   {track.name}
                 </option>
               ))}
           </select>
-          {watchTrack && (
+          {chosenTrack && (
             <button type="button" onClick={handlePlayVideo}>
               PLAY {chosenVideoTrack}
             </button>
