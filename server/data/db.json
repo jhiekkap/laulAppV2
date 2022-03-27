@@ -1,0 +1,24 @@
+{
+  "productions": {
+    "2323": {
+      "id": "2323",
+      "name": "Rukous"
+    },
+    "3434": {
+      "id": "3434",
+      "name": "Virsi"
+    }
+  },
+  "tracks": { 
+  },
+  "users": {
+    "1234": {
+      "id": "1234",
+      "name": "Monster68"
+    },
+    "5678": {
+      "id": "5678",
+      "name": "Ms Sunshine"
+    }
+  }
+}

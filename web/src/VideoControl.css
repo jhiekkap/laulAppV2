@@ -1,0 +1,28 @@
+.videoButtons {
+  display: flex;
+  justify-content: center;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: center;
+  margin: 5px;
+  padding: 5px;
+}
+
+.titleRow > input {
+  margin-left: 10px;
+}
+
+.titleRow > select {
+  margin: 0px 10px;
+}
+
+#uploadButton {
+  margin-left: 5px;
+}
+
+#divider {
+  border-bottom: 3px ridge;
+  margin: 10px 0px;
+}

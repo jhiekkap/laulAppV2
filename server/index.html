@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="file" id="fileUpload" />
+    <script>
+        const handleImageUpload = event => {
+            const files = event.target.files
+            console.log('FILEET', files)
+            const formData = new FormData()
+            formData.append('myFile', files[0])
+
+            fetch('http://localhost:3000/tracks', {
+                method: 'POST',
+                body: formData
+            })
+                //.then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        }
+
+        document.querySelector('#fileUpload').addEventListener('change', event => {
+            handleImageUpload(event)
+        })
+    </script>
+</body>
+
+</html>
