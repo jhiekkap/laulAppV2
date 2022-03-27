@@ -9,7 +9,7 @@ const VideoControl = () => {
   const [videoMode, setVideoMode] = useState("recording");
   const [downloadButton, setDownloadButton] = useState({});
   const [_users, setUsers] = useState([]);
-  const [songs, setProductions] = useState([]);
+  const [songs, setSongs] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [blob, setBlob] = useState(null);
   const [trackInfo, setTrackInfo] = useState({ trackName: "" });
@@ -31,7 +31,7 @@ const VideoControl = () => {
       const { data: users } = await axios.get(apiBaseUrl + "/api/users");
       setUsers(users);
       const { data: songs } = await axios.get(apiBaseUrl + "/api/songs");
-      setProductions(songs);
+      setSongs(songs);
       const { data: tracks } = await axios.get(apiBaseUrl + "/api/tracks");
       setTracks(tracks);
     } catch (error) {
@@ -169,6 +169,7 @@ const VideoControl = () => {
       });
 
       // console.log("NEW TRACK", newTrack);
+      // fetchData();
       setTracks(tracks.concat(newTrack));
     } catch (error) {
       console.log(error);
@@ -240,9 +241,9 @@ const VideoControl = () => {
         SONG
         <select
           value={trackInfo.songId}
-          onChange={({ target }) =>
-            setTrackInfo({ ...trackInfo, songId: target.value })
-          }
+          onChange={({ target }) => {
+            setTrackInfo({ ...trackInfo, songId: target.value });
+          }}
           placeholder="valitse"
         >
           {songs.map((song) => (
