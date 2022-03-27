@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "./VideoControl.css";
 import axios from "axios";
 
-//let recordingTimeMS = 5000;
+//const recordingTimeMS = 5000;
 const apiBaseUrl = "http://localhost:3001";
 
 const VideoControl = () => {
@@ -18,7 +18,7 @@ const VideoControl = () => {
 
   const previewRef = useRef();
   const recordingRef = useRef();
-  const playRemoteRef = useRef(); 
+  const playRemoteRef = useRef();
 
   const chosenVideoTrack = watchTrack
     ? productions.find((production) => production.id === watchProduction).name +
@@ -27,7 +27,7 @@ const VideoControl = () => {
     : "";
 
   const fetchData = async () => {
-    try{
+    try {
       const { data: users } = await axios.get(apiBaseUrl + "/api/users");
       setUsers(users);
       const { data: productions } = await axios.get(
@@ -38,7 +38,7 @@ const VideoControl = () => {
       setTracks(tracks);
     } catch (error) {
       console.log(error);
-    } 
+    }
   };
 
   useEffect(() => {
@@ -60,9 +60,9 @@ const VideoControl = () => {
     return new Promise(resolve => setTimeout(resolve, delayInMS));
   } */
 
-  const startRecording = (stream, lengthInMS) => {
-    let recorder = new MediaRecorder(stream);
-    let data = [];
+  const startRecording = async (stream, lengthInMS) => {
+    const recorder = new MediaRecorder(stream);
+    const data = [];
 
     recorder.ondataavailable = (event) => {
       console.log(event.data, Date.now());
@@ -71,65 +71,61 @@ const VideoControl = () => {
     recorder.start();
     // console.log(recorder.state + " for " + lengthInMS / 1000 + " seconds...");
 
-    let stopped = new Promise((resolve, reject) => {
+    const stopped = new Promise((resolve, reject) => {
       recorder.onstop = resolve;
       recorder.onerror = (event) => reject(event.name);
     });
 
-    /* let recorded = wait(lengthInMS).then(
+    /* const recorded = wait(lengthInMS).then(
       () => recorder.state === "recording" && recorder.stop()
     ); */
 
-    return Promise.all([
+    await Promise.all([
       stopped,
-      // recorded
-    ]).then(() => data);
+      //recorded,
+    ]);
+    return data;
   };
 
   const stop = (stream) => {
     stream.getTracks().forEach((track) => track.stop());
   };
 
-  const handleStartButton = () => {
+  const handleStartButton = async () => {
     setVideoMode("recording");
     const preview = previewRef.current;
-    navigator.mediaDevices
-      .getUserMedia({
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
-      })
-      .then((stream) => {
-        // console.log("STREAM", stream);
-        preview.srcObject = stream;
-        setDownloadButton({ ...downloadButton, href: stream });
-        preview.captureStream =
-          preview.captureStream || preview.mozCaptureStream;
-        return new Promise((resolve) => (preview.onplaying = resolve));
-      })
-      .then(() =>
-        startRecording(preview.captureStream() /* , recordingTimeMS */)
-      )
-      .then((recordedChunks) => {
-        let recordedBlob = new Blob(recordedChunks, { type: "video/mp4" });
-        // console.log("BLOBBI", recordedBlob);
-        setBlob(recordedBlob); 
-        const recording = recordingRef.current;
-        recording.src = URL.createObjectURL(recordedBlob);
-        setDownloadButton({
-          download: "RecordedVideo.webm",
-          href: recording.src,
-        });
-
-        // console.log(
-        //   "Successfully recorded " +
-        //     recordedBlob.size +
-        //     " bytes of " +
-        //     recordedBlob.type +
-        //     " media."
-        // );
-      })
-      .catch(console.log);
+      });
+      preview.srcObject = stream;
+      setDownloadButton({ ...downloadButton, href: stream });
+      preview.captureStream = preview.captureStream || preview.mozCaptureStream;
+      await new Promise((resolve) => (preview.onplaying = resolve));
+      const recordedChunks = await startRecording(preview.captureStream() /* , recordingTimeMS */);
+      const recordedBlob = new Blob(recordedChunks, { type: "video/mp4" });
+      // console.log("BLOBBI", recordedBlob);
+      setBlob(recordedBlob);
+      const recording = recordingRef.current;
+      recording.src = URL.createObjectURL(recordedBlob);
+      setDownloadButton({
+        download: "RecordedVideo.webm",
+        href: recording.src,
+      });
+      // console.log(
+      //   "Successfully recorded " +
+      //     recordedBlob.size +
+      //     " bytes of " +
+      //     recordedBlob.type +
+      //     " media."
+      // );
+      // })
+    } catch (error) {
+      console.log(error);
+    }
   };
+
   const handleStopButton = () => {
     const preview = previewRef.current;
     stop(preview.srcObject);
@@ -192,13 +188,32 @@ const VideoControl = () => {
   return (
     <div className="block videoBlock">
       <div style={{ display: videoMode === "recording" ? "block" : "none" }}>
-        <video ref={previewRef} id="preview" width="270" height="200" autoPlay muted></video>
+        <video
+          ref={previewRef}
+          id="preview"
+          width="270"
+          height="200"
+          autoPlay
+          muted
+        ></video>
       </div>
       <div style={{ display: videoMode === "playLocal" ? "block" : "none" }}>
-        <video ref={recordingRef} id="recording" width="270" height="200" controls></video>
+        <video
+          ref={recordingRef}
+          id="recording"
+          width="270"
+          height="200"
+          controls
+        ></video>
       </div>
       <div style={{ display: videoMode === "playRemote" ? "block" : "none" }}>
-        <video ref={playRemoteRef} id="playRemote" width="270" height="200" autoPlay></video>
+        <video
+          ref={playRemoteRef}
+          id="playRemote"
+          width="270"
+          height="200"
+          autoPlay
+        ></video>
       </div>
       <div className="videoButtons">
         <button onClick={() => handleStartButton()}>REC</button>
