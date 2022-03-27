@@ -8,7 +8,7 @@ const apiBaseUrl = "http://localhost:3001";
 const VideoControl = () => {
   const [videoMode, setVideoMode] = useState("recording");
   const [downloadButton, setDownloadButton] = useState({});
-  const [users, setUsers] = useState([]);
+  const [_users, setUsers] = useState([]);
   const [productions, setProductions] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [blob, setBlob] = useState(null);
@@ -103,7 +103,9 @@ const VideoControl = () => {
       setDownloadButton({ ...downloadButton, href: stream });
       preview.captureStream = preview.captureStream || preview.mozCaptureStream;
       await new Promise((resolve) => (preview.onplaying = resolve));
-      const recordedChunks = await startRecording(preview.captureStream() /* , recordingTimeMS */);
+      const recordedChunks = await startRecording(
+        preview.captureStream() /* , recordingTimeMS */
+      );
       const recordedBlob = new Blob(recordedChunks, { type: "video/mp4" });
       // console.log("BLOBBI", recordedBlob);
       setBlob(recordedBlob);
@@ -176,13 +178,12 @@ const VideoControl = () => {
     }
   };
 
-  const handlePlayVideo = () => {
-    console.log("PLAYING VIDEO");
+  const handlePlayVideo = () => { 
     setVideoMode("playRemote");
     const playRemote = playRemoteRef.current;
-    playRemote.src =
-      "http://localhost:3001" +
-      tracks.find((track) => track.id === watchTrack).url;
+    playRemote.src = `http://localhost:3001${
+      tracks.find((track) => track.id === watchTrack).url
+    }`;
   };
 
   return (
@@ -245,8 +246,8 @@ const VideoControl = () => {
           onChange={({ target }) =>
             setTrackInfo({ ...trackInfo, productionId: target.value })
           }
-        >
-          <option>valitse</option>
+          placeholder="valitse"
+        >  
           {productions.map((production) => (
             <option key={production.id} value={production.id}>
               {production.name}
@@ -271,8 +272,8 @@ const VideoControl = () => {
         <select
           value={watchProduction}
           onChange={({ target }) => setWatchProduction(target.value)}
+          placeholder="valitse"
         >
-          <option>valitse</option>
           {productions.map((production) => (
             <option key={production.id} value={production.id}>
               {production.name}
@@ -286,8 +287,8 @@ const VideoControl = () => {
           <select
             value={watchTrack}
             onChange={({ target }) => setWatchTrack(target.value)}
+            placeholder="valitse"
           >
-            <option>valitse</option>
             {tracks
               .filter((track) => track.productionId === watchProduction)
               .map((track) => (
