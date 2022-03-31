@@ -1,39 +1,66 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./VideoControl.css";
 import axios from "axios";
+import { stringify } from "querystring";
 
 //const recordingTimeMS = 5000;
 const apiBaseUrl = "http://localhost:3001";
 
+type Song = {
+  id: string;
+  name: string;
+};
+
+type Track = {
+  id: string;
+  name: string;
+  songId: string;
+  url: string;
+}
+
+type TrackInfo = {
+  trackName: string;
+  songId?: string;
+}
+
+type DownLoadButton = { href: string; download: string } & {};
+
+// interface HTMLMediaElementWithCaptureStream extends HTMLVideoElement {
+//   captureStream(): MediaStream;
+//   mozCaptureStream(): MediaStream;
+// }
+
 const VideoControl = () => {
   const [videoMode, setVideoMode] = useState("recording");
-  const [downloadButton, setDownloadButton] = useState({});
+  const [downloadButton, setDownloadButton] = useState<DownLoadButton>({ href: '', download: '' });
   const [_users, setUsers] = useState([]);
-  const [songs, setSongs] = useState([]);
-  const [tracks, setTracks] = useState([]);
-  const [blob, setBlob] = useState(null);
-  const [trackInfo, setTrackInfo] = useState({ trackName: "" });
-  const [chosenSong, setChosenSong] = useState("");
-  const [chosenTrack, setChosenTrack] = useState("");
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [trackInfo, setTrackInfo] = useState<TrackInfo>({ trackName: "" });
+  const [chosenSong, setChosenSong] = useState<string | undefined>();
+  const [chosenTrack, setChosenTrack] = useState<string | undefined>();
 
-  const previewRef = useRef();
-  const recordingRef = useRef();
-  const playRemoteRef = useRef();
+  const previewRef = useRef<any>();
+  const recordingRef = useRef<any>();
+  const playRemoteRef = useRef<any>(); // HTMLMediaElementWithCaptureStream
 
   const chosenVideoTrack = chosenTrack
-    ? songs.find((song) => song.id === chosenSong).name +
-      "/" +
-      tracks.find((track) => track.id === chosenTrack).name
+    ? songs.find((song) => song.id === chosenSong)?.name +
+    "/" +
+    tracks.find((track) => track.id === chosenTrack)?.name
     : "";
 
   const fetchData = async () => {
     try {
-      const { data: users } = await axios.get(apiBaseUrl + "/api/users");
-      setUsers(users);
-      const { data: songs } = await axios.get(apiBaseUrl + "/api/songs");
-      setSongs(songs);
-      const { data: tracks } = await axios.get(apiBaseUrl + "/api/tracks");
-      setTracks(tracks);
+      const { data: dbUsers } = await axios.get(apiBaseUrl + "/api/users");
+      setUsers(dbUsers);
+      const { data: dbSongs } = await axios.get(apiBaseUrl + "/api/songs");
+      setSongs(dbSongs);
+      setChosenSong(dbSongs[0]);
+      setTrackInfo({...trackInfo, songId: dbSongs[0].id})
+      const { data: dbTracks } = await axios.get(apiBaseUrl + "/api/tracks");
+      setTracks(dbTracks);
     } catch (error) {
       console.log(error);
     }
@@ -42,6 +69,8 @@ const VideoControl = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  console.log({chosenSong, trackInfo})
 
   // console.log(
   //   "USERS:",
@@ -58,9 +87,9 @@ const VideoControl = () => {
     return new Promise(resolve => setTimeout(resolve, delayInMS));
   } */
 
-  const startRecording = async (stream, lengthInMS) => {
+  const startRecording = async (stream: MediaStream, _lengthInMS?: number) => {
     const recorder = new MediaRecorder(stream);
-    const data = [];
+    const data: Blob[] = [];
 
     recorder.ondataavailable = (event) => {
       console.log(event.data, Date.now());
@@ -71,7 +100,7 @@ const VideoControl = () => {
 
     const stopped = new Promise((resolve, reject) => {
       recorder.onstop = resolve;
-      recorder.onerror = (event) => reject(event.name);
+      recorder.onerror = (event) => reject(event/* .name */);
     });
 
     /* const recorded = wait(lengthInMS).then(
@@ -85,20 +114,22 @@ const VideoControl = () => {
     return data;
   };
 
-  const stop = (stream) => {
-    stream.getTracks().forEach((track) => track.stop());
+  const stop = (stream: any) => {
+    stream.getTracks().forEach((track: any) => track.stop());
   };
 
   const handleStartButton = async () => {
     setVideoMode("recording");
     const preview = previewRef.current;
+    if (!preview) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
       preview.srcObject = stream;
-      setDownloadButton({ ...downloadButton, href: stream });
+     //  setDownloadButton({ ...downloadButton, href: stream });
+      
       preview.captureStream = preview.captureStream || preview.mozCaptureStream;
       await new Promise((resolve) => (preview.onplaying = resolve));
       const recordedChunks = await startRecording(
@@ -108,6 +139,7 @@ const VideoControl = () => {
       // console.log("BLOBBI", recordedBlob);
       setBlob(recordedBlob);
       const recording = recordingRef.current;
+      if (!recording) return;
       recording.src = URL.createObjectURL(recordedBlob);
       setDownloadButton({
         download: "RecordedVideo.webm",
@@ -128,20 +160,23 @@ const VideoControl = () => {
 
   const handleStopButton = () => {
     const preview = previewRef.current;
-    stop(preview.srcObject);
-    setVideoMode("playLocal");
+    if (preview?.srcObject) {
+      stop(preview.srcObject);
+      setVideoMode("playLocal");
+    }
   };
 
   const handleUploadButton = async () => {
-    // console.log("UPLOADING", downloadButton);
+    console.log("UPLOADING", downloadButton);
+    if (!blob) return;
 
     const name =
-      songs.find((song) => song.id === trackInfo.songId).name +
+      songs.find((song) => song.id === trackInfo.songId)?.name +
       "_" +
       trackInfo.trackName;
 
     const file = new File([blob], name, {
-      lastModified: new Date(),
+      lastModified: Date.now(),
       type: "video/webm",
     });
     // console.log("UUSI FILEE", file);
@@ -179,10 +214,13 @@ const VideoControl = () => {
   const handlePlayVideo = () => {
     setVideoMode("playRemote");
     const playRemote = playRemoteRef.current;
-    playRemote.src = `http://localhost:3001${
-      tracks.find((track) => track.id === chosenTrack).url
-    }`;
+    if (playRemote) {
+      playRemote.src = `http://localhost:3001${tracks.find((track) => track.id === chosenTrack)?.url
+        }`;
+    }
   };
+
+  if (!previewRef) return null;
 
   return (
     <div className="block videoBlock">
