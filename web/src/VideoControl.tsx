@@ -196,9 +196,6 @@ const VideoControl = () => {
       });
 
       // console.log("NEW TRACK", newTrack);
-      // fetchData();
-     // setTracks(tracks.concat(newTrack));
-      setChosenTrack(newTrack.id)
       fetchData();
     } catch (error) {
       console.log(error);
@@ -276,7 +273,7 @@ const VideoControl = () => {
           onChange={({ target }) => {
             setTrackInfo({ ...trackInfo, songId: target.value });
           }}
-          placeholder="valitse"
+         // placeholder="valitse"
         >
           {songs.map((song) => (
             <option key={song.id} value={song.id}>
