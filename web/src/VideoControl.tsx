@@ -110,7 +110,7 @@ const VideoControl = () => {
     stream.getTracks().forEach((track: any) => track.stop());
   };
 
-  const handleStartButton = async () => {
+  const handleRecButton = async () => {
     setVideoMode("recording");
     const preview = previewRef.current;
     if (!preview) return;
@@ -244,7 +244,7 @@ const VideoControl = () => {
         ></video>
       </div>
       <div className="videoButtons">
-        <button onClick={() => handleStartButton()}>REC</button>
+        <button onClick={() => handleRecButton()}>REC</button>
         <button onClick={() => handleStopButton()}>STOP</button>
         <button>
           <a
