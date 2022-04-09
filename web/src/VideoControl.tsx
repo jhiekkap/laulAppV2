@@ -57,10 +57,15 @@ const VideoControl = () => {
       setUsers(dbUsers);
       const { data: dbSongs } = await axios.get(apiBaseUrl + "/api/songs");
       setSongs(dbSongs);
-      setChosenSong(dbSongs[0]);
-      setTrackInfo({...trackInfo, songId: dbSongs[0].id})
+      if (!chosenSong) {
+        setChosenSong(dbSongs[0].id);
+        setTrackInfo({ ...trackInfo, songId: dbSongs[0].id })
+      }
       const { data: dbTracks } = await axios.get(apiBaseUrl + "/api/tracks");
       setTracks(dbTracks);
+      if (!chosenTrack) {
+        setChosenTrack(dbTracks[0].id);
+      }
     } catch (error) {
       console.log(error);
     }
@@ -69,19 +74,6 @@ const VideoControl = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
-  console.log({chosenSong, trackInfo})
-
-  // console.log(
-  //   "USERS:",
-  //   users,
-  //   "PRODUCTIONS: ",
-  //   songs,
-  //   "TRACKS: ",
-  //   tracks
-  // );
-  // console.log("TRACKINFO", trackInfo);
-  // console.log("WATCH PRODUCTION & TRACK", chosenSong , chosenTrack );
 
   /* function wait(delayInMS) {
     return new Promise(resolve => setTimeout(resolve, delayInMS));
@@ -128,8 +120,8 @@ const VideoControl = () => {
         audio: true,
       });
       preview.srcObject = stream;
-     //  setDownloadButton({ ...downloadButton, href: stream });
-      
+      //  setDownloadButton({ ...downloadButton, href: stream });
+
       preview.captureStream = preview.captureStream || preview.mozCaptureStream;
       await new Promise((resolve) => (preview.onplaying = resolve));
       const recordedChunks = await startRecording(
@@ -167,11 +159,11 @@ const VideoControl = () => {
   };
 
   const handleUploadButton = async () => {
-    console.log("UPLOADING", downloadButton);
+    console.log("UPLOADING", trackInfo);
     if (!blob) return;
 
     const name =
-      songs.find((song) => song.id === trackInfo.songId)?.name +
+      songs.find((song) => song.id === trackInfo.songId)!.name +
       "_" +
       trackInfo.trackName;
 
@@ -205,7 +197,9 @@ const VideoControl = () => {
 
       // console.log("NEW TRACK", newTrack);
       // fetchData();
-      setTracks(tracks.concat(newTrack));
+     // setTracks(tracks.concat(newTrack));
+      setChosenTrack(newTrack.id)
+      fetchData();
     } catch (error) {
       console.log(error);
     }
@@ -265,7 +259,7 @@ const VideoControl = () => {
           </a>
         </button>
       </div>
-      <div className="titleRow">
+      {blob && <div className="titleRow">
         TRACK NAME
         <input
           type="text"
@@ -274,8 +268,8 @@ const VideoControl = () => {
             setTrackInfo({ ...trackInfo, trackName: target.value })
           }
         />
-      </div>
-      <div className="titleRow">
+      </div>}
+      {trackInfo.trackName && <div className="titleRow">
         SONG
         <select
           value={trackInfo.songId}
@@ -297,7 +291,7 @@ const VideoControl = () => {
         >
           UPLOAD
         </button>
-      </div>
+      </div>}
       {/* <div id="divider"></div> */}
       <br />
       <br />
